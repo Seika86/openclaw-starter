@@ -1,0 +1,45 @@
+services:
+  buddy:
+    image: ghcr.io/openclaw/openclaw:latest
+    container_name: my-buddy
+    restart: unless-stopped
+    init: true
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN:-}
+      TZ: Asia/Tokyo
+      HOME: /home/node
+    volumes:
+      # 設定・記憶（Docker内で高速管理、参加者は意識しなくてOK）
+      - openclaw_data:/home/node/.openclaw
+      # ⭐ バディが触れる唯一のフォルダ（ホスト側、エクスプローラから触れる）
+      - ./workspace:/home/node/.openclaw/workspace
+    extra_hosts:
+      # ローカルLLM (LM Studio / Ollama) をホスト経由で呼べるようにする
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "${OPENCLAW_GATEWAY_PORT:-18789}:18789"
+    command:
+      - node
+      - dist/index.js
+      - gateway
+      - --bind
+      - lan
+      - --port
+      - "18789"
+      - --allow-unconfigured
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:18789/healthz').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  openclaw_data:

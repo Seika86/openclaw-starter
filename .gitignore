@@ -1,0 +1,11 @@
+.env
+.env.local
+
+# 参加者のworkspace中身は配布対象外
+workspace/*
+!workspace/.gitkeep
+!workspace/README.txt
+
+# OS
+.DS_Store
+Thumbs.db
